@@ -1,5 +1,5 @@
 
-jvm参数 -D
+java参数 -D  启动java  不会被覆盖
 
 System.getProperties
 
