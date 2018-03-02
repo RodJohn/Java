@@ -54,6 +54,7 @@ public LinkedList() {
 }
 
 将header节点的前一个元素、后一个元素都指向自身。
+双向循环链表
 ```
 
 # 功能实现
@@ -187,3 +188,19 @@ private E remove(Entry<E> e) {
 ```
 
 
+## poll
+
+```
+     // 删除并返回第一个节点
+     // 若LinkedList的大小为0,则返回null
+     public E poll() {
+         if (size==0)
+             return null;
+         return removeFirst();
+     }
+
+     // 删除LinkedList的第一个元素
+     public E removeFirst() {
+         return remove(header.next);
+     }
+```
