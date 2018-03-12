@@ -1,12 +1,14 @@
-#TreeMap
+# TreeMap
 
 
 
-#类结构
+# 类结构
+
+图解
 
 ![这里写图片描述](http://img.blog.csdn.net/20171216145332341?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvcm9kX2pvaG4=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
 
-##继承关系
+类定义
 
 ```
 public class TreeMap<K,V>
@@ -14,7 +16,7 @@ public class TreeMap<K,V>
     implements NavigableMap<K,V>, Cloneable, java.io.Serializable {}
 ```
 
-##属性
+## 属性
 
 ```
     static final class Entry<K,V> implements Map.Entry<K,V> {
@@ -27,26 +29,31 @@ public class TreeMap<K,V>
 ```
 
 
-##数据结构
-
-
-	红黑树的节点是Entry类型，它包含了红黑数的6个基本组成成分：key(键)、value(值)、left(左孩子)、right(右孩子)、parent(父节点)、color(颜色)。Entry节点根据key进行排序，Entry节点包含的内容为value。 
-	红黑数排序时，根据Entry中的key进行排序；Entry中的key比较大小是根据比较器comparator来进行判断的。
-	size是红黑数中节点的个数。
-
 
 #算法
 
-红黑树
-http://blog.csdn.net/rod_john/article/details/78760147
+    红黑树
+    平衡二叉B树
 
 
-#功能实现
-
-##put
+# put
 
 
-####添加子节点
+## 添加子节点
+
+思路
+
+    1.判断root是否为空,
+    1.1 root为空,则将该节点设置为root
+    2.root不为空,用该节点和root比较
+    2.1 root等于该节点,用该节点的值替换root的值,退出
+    2.2 root大于该节点,用root的左节点和该节点比较,递归
+    2.3 root小于该节点,用root的右节点和该节点比较,递归
+    3.直至被比较节点没有子节点
+    4.将该节点设置为比较节点的子节点
+
+
+实现
 
 ```
 public V put(K key, V value) {
@@ -125,18 +132,24 @@ public V put(K key, V value) {
 ```
 
 
-	1、以根节点为初始节点进行检索。
-	2、与当前节点进行比对，若新增节点值较大，则以当前节点的右子节点作为新的当前节点。否则以当前节点的左子节点作为新的当前节点。
-	3、循环递归2步骤知道检索出合适的叶子节点为止。
-	4、将新增节点与3步骤中找到的节点进行比对，如果新增节点较大，则添加为右子节点；否则添加为左子节点。
 
-####平衡树
+## 平衡树
+
+思路
+
+    1. 设置新节点为红色
+    2. 新节点的平衡条件 为root 父节点为黑色
+    3. 父节点为爷节点的左支
+    3.1 叔节点为红色,则爷节点变为红色,父和叔节点转为黑色.并从爷节点重新平衡
+    3.2 叔节点为黑色,或者不存在
+    (3.2 该节点为右节点,以父节点为轴左转,(转化为下面的情况))
+    3.2 该节点为左节点,设置爷节点为红色,父节点为黑色,以爷节点为轴右转
+    
+
+实现
 
 ```
-**
-     * 新增节点后的修复操作
-     * x 表示新增节点
-     */
+     x 表示新增节点
      private void fixAfterInsertion(Entry<K,V> x) {
             x.color = RED;    //新增节点的颜色为红色
 
@@ -212,37 +225,55 @@ public V put(K key, V value) {
         }
 ```
 
+## 左旋转
+
+旋转不会
+
+图例
+
+![这里写图片描述](http://img.blog.csdn.net/20180309153455448?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvcm9kX2pvaG4=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+
+思路
+
+    原先右支
+        右支的父节点变为爷节点
+        右支的左节点设置为旋转节点
+    原先右支的左孩子
+        父节点改为旋转节点
+    爷节点
+        爷节点的原先子节点设置为原先的右支节点
+    旋转节点        
+        旋转节点的父节点改为原先的右节点
+        旋转节点的右支设置为原先右支的左节点
+    
+实现
+
 ```
-private void rotateLeft(Entry<K,V> p) {
-        if (p != null) {
-            //获取P的右子节点，其实这里就相当于新增节点N（情况四而言）
-            Entry<K,V> r = p.right;
-            //将R的左子树设置为P的右子树
-            p.right = r.left;
-            //若R的左子树不为空，则将P设置为R左子树的父亲
-            if (r.left != null)
-                r.left.parent = p;
-            //将P的父亲设置R的父亲
-            r.parent = p.parent;
-            //如果P的父亲为空，则将R设置为跟节点
-            if (p.parent == null)
-                root = r;
-            //如果P为其父节点（G）的左子树，则将R设置为P父节点(G)左子树
-            else if (p.parent.left == p)
-                p.parent.left = r;
-            //否则R设置为P的父节点（G）的右子树
-            else
-                p.parent.right = r;
-            //将P设置为R的左子树
-            r.left = p;
-            //将R设置为P的父节点
-            p.parent = r;
-        }
-    }
+private void rotateLeft(Entry<K,V> p) {  
+        if (p != null) {  
+            //获取P的右子节点，其实这里就相当于新增节点N（情况四而言）  
+            Entry<K,V> r = p.right;  
+            //将R的左子树设置为P的右子树  
+            p.right = r.left;  
+            //若R的左子树不为空，则将P设置为R左子树的父亲  
+            if (r.left != null)  
+                r.left.parent = p;  
+            //将P的父亲设置R的父亲  
+            r.parent = p.parent;  
+            //如果P的父亲为空，则将R设置为跟节点  
+            if (p.parent == null)  
+                root = r;  
+            //如果P为其父节点（G）的左子树，则将R设置为P父节点(G)左子树  
+            else if (p.parent.left == p)  
+                p.parent.left = r;  
+            //否则R设置为P的父节点（G）的右子树  
+            else  
+                p.parent.right = r;  
+            //将P设置为R的左子树  
+            r.left = p;  
+            //将R设置为P的父节点  
+            p.parent = r;  
+        }  
+    }  
 ```
-
-TreeMap：采用树型储存结构按序存放，因此它便有一些扩展的方法，比如firstKey(),lastKey()等，你还可以从TreeMap中指定一个范围以取得其子Map。
-
-内部实现是一颗二叉排序树，其中序遍历结果为递增序列。所以要求他的Key必须是Comparable或者创建TreeMap的时候指定Comparator。
-
-当Key实现Comparable<E>接口时，必须实现comparaTo(E e)方法，当使用外部比较器（Comparator<T>）时，需实现Comparator<T>的compare(T t1, T t2)方法
